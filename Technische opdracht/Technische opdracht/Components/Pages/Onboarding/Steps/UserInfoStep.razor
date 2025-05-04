@@ -1,0 +1,44 @@
+﻿@using Technische_opdracht.Models
+@using Technische_opdracht.Services
+@using Technische_opdracht.Components.Pages.Onboarding.Steps
+@inject RegistrationStateService RegistrationState
+@rendermode InteractiveServer
+
+<div class="container mt-5 d-flex flex-column align-items-center">
+    <div class="w-100" style="max-width: 500px;">
+        <EditForm Model="step1Model" OnValidSubmit="HandleValidSubmit" FormName="UserRegistrationForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="username">Gebruikersnaam</label>
+                <InputText id="username" class="form-control" @bind-Value="step1Model.Username" />
+                <ValidationMessage For="@(() => step1Model.Username)" />
+            </div>
+
+            <div class="form-group mt-2 mb-2">
+                <label for="email">E-mailadres</label>
+                <InputText id="email" class="form-control" @bind-Value="step1Model.Email" />
+                <ValidationMessage For="@(() => step1Model.Email)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Volgende</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    public Step1Model step1Model { get; set; } // Receive the model from the parent
+
+    [Parameter]
+    public EventCallback OnNext { get; set; } // Event callback to move to the next step
+
+    private async Task HandleValidSubmit()
+    {
+        RegistrationState.Registration.Username = step1Model.Username;
+        RegistrationState.Registration.Email = step1Model.Email;
+        // Handle form submission and invoke OnNext to notify the parent
+        await OnNext.InvokeAsync();
+    }
+}

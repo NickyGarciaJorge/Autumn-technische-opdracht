@@ -1,0 +1,67 @@
+﻿@page "/register/step1"
+@using System.ComponentModel.DataAnnotations
+@using TechnischeOpdrachtAutumn.Helpers
+@using TechnischeOpdrachtAutumn.Models
+@inject UserRegistrationState RegistrationState
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center align-items-center">
+    <div class="w-100" style="max-width: 500px;">
+        <h3>Step 1: User Information</h3>
+
+        <!-- Progress Bar -->
+        <div class="w-50 mb-4">
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: @ProgressPercent%;">
+                    @($"{ProgressPercent:F0}%")
+                </div>
+            </div>
+        </div>
+
+        <EditForm Model="step1Model" OnValidSubmit="NextStep" FormName="RegisterStep1" Enhance>
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="Username" class="form-label">Username</label>
+                <InputText id="Username" class="form-control" @bind-Value="step1Model.Username" 
+                           aria-label="Enter your username" />
+                <ValidationMessage For="@(() => step1Model.Username)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="Email" class="form-label">Email</label>
+                <InputText id="Email" class="form-control" @bind-Value="step1Model.Email" 
+                           aria-label="Enter your email address" />
+                <ValidationMessage For="@(() => step1Model.Email)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary" aria-label="Proceed to next step">Next</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private double ProgressPercent => ((RegistrationState.CurrentStep) / (double)RegistrationState.MaxSteps) * 100;
+
+    [SupplyParameterFromForm]
+    Step1Model step1Model { get; set; } = new Step1Model();
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(RegistrationState.UserRegistration.Email) && !string.IsNullOrEmpty(RegistrationState.UserRegistration.Username))
+        {
+            step1Model.Username = RegistrationState.UserRegistration.Username;
+            step1Model.Email = RegistrationState.UserRegistration.Email;
+        }
+    }
+
+    private void NextStep()
+    {
+        RegistrationState.UserRegistration.Username = step1Model.Username;
+        RegistrationState.UserRegistration.Email = step1Model.Email;
+        RegistrationState.CurrentStep++;
+
+        NavigationManager.NavigateTo("/register/step2");
+    }
+}

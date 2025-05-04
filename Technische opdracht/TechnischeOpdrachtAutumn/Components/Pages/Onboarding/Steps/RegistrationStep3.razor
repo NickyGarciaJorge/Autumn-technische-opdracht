@@ -1,0 +1,99 @@
+﻿@page "/register/step3"
+@using TechnischeOpdrachtAutumn.Helpers
+@using TechnischeOpdrachtAutumn.Models
+@inject NavigationManager NavigationManager
+@inject UserRegistrationState RegistrationState
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center align-items-center">
+    <div class="w-100" style="max-width: 500px;">
+        <h3>Step 3: Select Your Role</h3>
+
+        <!-- Progress Bar -->
+        <div class="w-50 mb-4">
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: @ProgressPercent%;">
+                    @($"{ProgressPercent:F0}%")
+                </div>
+            </div>
+        </div>
+
+        <EditForm Model="step3Model" OnValidSubmit="NextStep" FormName="RegistrationStep3" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @foreach (var role in Enum.GetValues<UserRoleEnum>())
+            {
+                <div class="form-check mb-2">
+                    <input class="form-check-input"
+                           type="radio"
+                           name="userRole"
+                           id="@role"
+                           value="@role"
+                           @onchange="() => step3Model.UserRole = role"
+                           checked="@((step3Model.UserRole == role))"
+                           aria-label="Select role: @role" />
+                    <label class="form-check-label fw-bold" for="@role">@role</label>
+                    <div class="form-text text-muted ms-4" id="roleDescription">
+                        @GetRoleDescription(role)
+                    </div>
+                </div>
+            }
+
+            <div class="form-check mt-4">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="consentNotifications"
+                       @bind="step3Model.ConsentNotifications"
+                       aria-label="Consent to receive notifications" />
+                <label class="form-check-label" for="consentNotifications">
+                    I agree to receive notifications.
+                </label>
+            </div>
+
+            <button type="button" class="btn btn-secondary mt-3" @onclick="Back" aria-label="Go back to previous step">Back</button>
+            <button type="submit" class="btn btn-success mt-3" aria-label="Submit form">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private double ProgressPercent => ((RegistrationState.CurrentStep) / (double)RegistrationState.MaxSteps) * 100;
+
+    [SupplyParameterFromForm]
+    Step3Model step3Model { get; set; } = new Step3Model();
+
+    private string GetRoleDescription(UserRoleEnum role)
+    {
+        return role switch
+        {
+            UserRoleEnum.Admin => "Full access to all features and user management.",
+            UserRoleEnum.Manager => "Can manage user content and moderate discussions.",
+            UserRoleEnum.User => "Regular user with access to basic functionality.",
+            _ => "No description available."
+        };
+    }
+
+    protected override void OnInitialized()
+    {
+        if (RegistrationState.UserRegistration.UserRole != null)
+        {
+            step3Model.UserRole = RegistrationState.UserRegistration.UserRole;
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/register/step2");
+        RegistrationState.CurrentStep--;
+    }
+
+    private void NextStep()
+    {
+        RegistrationState.UserRegistration.UserRole = step3Model.UserRole;
+        // You can also persist step3Model.ConsentNotifications somewhere if needed
+        RegistrationState.CurrentStep++;
+
+        NavigationManager.NavigateTo("/register/step4");
+    }
+}

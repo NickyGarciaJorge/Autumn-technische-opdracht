@@ -1,0 +1,75 @@
+﻿@page "/register/step2"
+@using TechnischeOpdrachtAutumn.Helpers
+@using TechnischeOpdrachtAutumn.Models
+@inject UserRegistrationState RegistrationState
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center align-items-center">
+    <div class="w-100" style="max-width: 500px;">
+        <h3>Step 2: Set Password</h3>
+
+        <!-- Progress Bar -->
+        <div class="w-50 mb-4">
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: @ProgressPercent%;">
+                    @($"{ProgressPercent:F0}%")
+                </div>
+            </div>
+        </div>
+
+        <EditForm Model="step2Model" OnValidSubmit="NextStep" FormName="RegisterStep2" Enhance>
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="Password">Password</label>
+                <InputText id="Password" type="password" class="form-control"
+                           @bind-Value="step2Model.Password"
+                           aria-label="Enter your password" />
+                <ValidationMessage For="@(() => step2Model.Password)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="ConfirmPassword">Confirm Password</label>
+                <InputText id="ConfirmPassword" type="password" class="form-control"
+                           @bind-Value="step2Model.ConfirmPassword"
+                           aria-label="Confirm your password" />
+                <ValidationMessage For="@(() => step2Model.ConfirmPassword)" />
+            </div>
+
+            <button type="button" class="btn btn-secondary" @onclick="Back" aria-label="Go back to Step 1">Back</button>
+            <button type="submit" class="btn btn-primary" aria-label="Proceed to next step">Next</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private double ProgressPercent => ((RegistrationState.CurrentStep) / (double)RegistrationState.MaxSteps) * 100;
+
+    [SupplyParameterFromForm]
+    Step2Model step2Model { get; set; } = new Step2Model();
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(RegistrationState.UserRegistration.Password) && !string.IsNullOrEmpty(RegistrationState.UserRegistration.ConfirmPassword))
+        {
+            step2Model.Password = RegistrationState.UserRegistration.Password;
+            step2Model.ConfirmPassword = RegistrationState.UserRegistration.ConfirmPassword;
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/register/step1");
+        RegistrationState.CurrentStep--;
+    }
+
+    private void NextStep()
+    {
+        RegistrationState.UserRegistration.Password = step2Model.Password;
+        RegistrationState.UserRegistration.ConfirmPassword = step2Model.ConfirmPassword;
+        RegistrationState.CurrentStep++;
+
+        NavigationManager.NavigateTo("/register/step3");
+    }
+}

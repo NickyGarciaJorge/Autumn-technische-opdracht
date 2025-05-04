@@ -1,0 +1,68 @@
+﻿@page "/register/step4"
+@using Microsoft.AspNetCore.Mvc
+@using TechnischeOpdrachtAutumn.Helpers
+@using TechnischeOpdrachtAutumn.Models
+@using TechnischeOpdrachtAutumn.Services
+@inject RegistrationService RegistrationService
+@inject NavigationManager NavigationManager
+@inject UserRegistrationState RegistrationState
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center align-items-center">
+    <div class="w-100" style="max-width: 500px;">
+        <h3>Registration Complete</h3>
+
+        <!-- Progress Bar -->
+        <div class="w-50 mb-4">
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: @ProgressPercent%;">
+                    @($"{ProgressPercent:F0}%")
+                </div>
+            </div>
+        </div>
+
+        @if (string.IsNullOrEmpty(message))
+        {
+            <p>Submitting your registration...</p>
+        }
+        else
+        {
+            <p>@message</p>
+        }
+
+        <button type="button" class="btn btn-primary mt-3" @onclick="NavigateHome">Go to Home</button>
+
+    </div>
+</div>
+
+@code {
+    private double ProgressPercent => ((RegistrationState.CurrentStep) / (double)RegistrationState.MaxSteps) * 100;
+
+    private string message = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userRegistration = RegistrationState.UserRegistration;
+
+        var result = await RegistrationService.RegisterAsync(userRegistration);
+
+        if (result is OkObjectResult okResult)
+        {
+            message = $"Registration succesful, confirmation email is send to {userRegistration.Email}";
+        }
+        else if (result is BadRequestObjectResult badRequest)
+        {
+            message = $"Registration failed: {badRequest.Value}";
+        }
+        else
+        {
+            message = "An unexpected error occurred during registration.";
+        }
+    }
+
+    private void NavigateHome()
+    {
+        RegistrationState.Reset();
+        NavigationManager.NavigateTo("/");
+    }
+}

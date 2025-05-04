@@ -1,0 +1,86 @@
+﻿@page "/register"
+@using Technische_opdracht.Models
+@using Technische_opdracht.Services
+@using Microsoft.AspNetCore.Mvc
+@inject RegistrationService RegistrationService
+@rendermode InteractiveServer
+
+<div class="container mt-5 d-flex flex-column align-items-center">
+    <h3>User Onboarding</h3>
+    
+    <!-- Progress Bar -->
+    <div class="w-25 mb-4">
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: @ProgressPercent%;">
+                @($"{ProgressPercent:F0}%")
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Steps -->
+    <div class="step-container">
+        @switch (currentStepIndex)
+        {
+            case 0:
+                <UserInfoStep step1Model="step1Model" OnNext="GoToNextStep" />
+                break;
+            case 1:
+                <PasswordStep OnNext="GoToNextStep" OnPrevious="GoToPreviousStep" />
+                break;
+            case 2:
+                <RoleSelectionStep OnNext="GoToNextStep" OnPrevious="GoToPreviousStep" />
+                break;
+            case 3:
+                <NotificationConsentStep OnSubmit="SubmitForm" OnPrevious="GoToPreviousStep" />
+                break;
+            default:
+                <p>Registration complete! Thank you.</p>
+                break;
+        }
+    </div>
+</div>
+
+@code {
+    private int currentStepIndex = 0;
+    private const int maxSteps = 5;
+    private double ProgressPercent => ((currentStepIndex + 1) / (double)maxSteps) * 100;
+
+    // Model to store registration data
+    private UserRegistrationModel userRegistration = new UserRegistrationModel();
+
+    // Initialize step1Model to be used in the first step
+    private Step1Model step1Model => new Step1Model();
+
+    // Method to go to the next step
+    private void GoToNextStep()
+    {
+        if (currentStepIndex < maxSteps - 1)
+        {
+            currentStepIndex++;
+        }
+    }
+
+    // Method to go to the previous step
+    private void GoToPreviousStep()
+    {
+        if (currentStepIndex > 0)
+        {
+            currentStepIndex--;
+        }
+    }
+
+    // Handle form submission and call the registration service
+    private async Task SubmitForm()
+    {
+        var apiResult = await RegistrationService.RegisterAsync(userRegistration);
+
+        if (apiResult is OkObjectResult)
+        {
+            currentStepIndex = maxSteps - 1; // Show success screen
+        }
+        else
+        {
+            // Handle error case (e.g., show error message)
+        }
+    }
+}
